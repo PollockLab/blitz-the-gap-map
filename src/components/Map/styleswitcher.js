@@ -56,6 +56,7 @@ export class MapLibreStyleSwitcherControl {
         });
         setTimeout(() => {
           if (style.title === "Richness of all species") {
+            this.map.setLayoutProperty("counties", "visibility", "none");
             this.map.setLayoutProperty("richness_all", "visibility", "visible");
           }
           if (style.title === "Plant richness") {
