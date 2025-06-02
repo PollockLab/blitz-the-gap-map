@@ -8,6 +8,8 @@ import { amfhot, haline, ocean, custom } from "./colormaps";
 import Popup from "./Popup";
 import counties_challenges from "./counties_challenges.json";
 import counties_species from "./counties_species.json";
+import { MapLibreStyleSwitcherControl } from "./styleswitcher";
+import { baseLayers } from "./mapStyle";
 import "./map.css";
 
 export default function Map(props) {
@@ -17,7 +19,8 @@ export default function Map(props) {
 
   const mapRef = useRef();
 
-  const colormap = encodeURIComponent(JSON.stringify(custom));
+  //const colormap = encodeURIComponent(JSON.stringify(amfhot));
+  const colormap = "viridis";
 
   const everywhere_challenges = challenges
     .filter((c) => c.everywhere === true)
@@ -125,18 +128,34 @@ export default function Map(props) {
             type: "globe",
           },
           sources: {
-            satellite: {
-              url: "https://api.maptiler.com/tiles/satellite-v2/tiles.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL",
-              type: "raster",
-            },
-            /*cog: {
+            richness_all: {
               type: "raster",
               tiles: [
-                `https://tiler.biodiversite-quebec.ca/cog/tiles/{z}/{x}/{y}?url=${COGUrl}&rescale=0,10&colormap=${colormap}&resampling=cubic`,
+                `https://tiler.biodiversite-quebec.ca/cog/tiles/{z}/{x}/{y}?url=https://object-arbutus.cloud.computecanada.ca/bq-io/blitz-the-gap/SR_allSDMs.tif&rescale=0,1200&colormap_name=${colormap}`,
               ],
               tileSize: 256,
-              minzoom: 7.001,
-            },*/
+            },
+            richness_plants: {
+              type: "raster",
+              tiles: [
+                `https://tiler.biodiversite-quebec.ca/cog/tiles/{z}/{x}/{y}?url=https://object-arbutus.cloud.computecanada.ca/bq-io/blitz-the-gap/SR_plants.tif&rescale=0,700&colormap_name=${colormap}`,
+              ],
+              tileSize: 256,
+            },
+            richness_vertebrates: {
+              type: "raster",
+              tiles: [
+                `https://tiler.biodiversite-quebec.ca/cog/tiles/{z}/{x}/{y}?url=https://object-arbutus.cloud.computecanada.ca/bq-io/blitz-the-gap/SR_verts.tif&rescale=0,700&colormap_name=${colormap}`,
+              ],
+              tileSize: 256,
+            },
+            richness_butterflies: {
+              type: "raster",
+              tiles: [
+                `https://tiler.biodiversite-quebec.ca/cog/tiles/{z}/{x}/{y}?url=https://object-arbutus.cloud.computecanada.ca/bq-io/blitz-the-gap/SR_butterflies.tif&rescale=0,100&colormap_name=${colormap}`,
+              ],
+              tileSize: 256,
+            },
             counties: {
               type: "vector",
               url: "pmtiles://https://object-arbutus.cloud.computecanada.ca/bq-io/blitz-the-gap/counties_challenges.pmtiles",
@@ -164,6 +183,38 @@ export default function Map(props) {
               source: "background",
             },
             {
+              id: "richness_all",
+              type: "raster",
+              source: "richness_all",
+              layout: {
+                visibility: "none",
+              },
+            },
+            {
+              id: "richness_plants",
+              type: "raster",
+              source: "richness_plants",
+              layout: {
+                visibility: "none",
+              },
+            },
+            {
+              id: "richness_vertebrates",
+              type: "raster",
+              source: "richness_vertebrates",
+              layout: {
+                visibility: "none",
+              },
+            },
+            {
+              id: "richness_butterflies",
+              type: "raster",
+              source: "richness_butterflies",
+              layout: {
+                visibility: "none",
+              },
+            },
+            {
               id: "counties",
               type: "fill",
               "source-layer": "counties_challenges",
@@ -185,17 +236,6 @@ export default function Map(props) {
                 "fill-outline-color": "#ffffff",
               },
             },
-            /*{
-              id: "cog",
-              type: "raster",
-              source: "cog",
-              paint: {
-                "raster-opacity": opacity / 100,
-              },
-              minzoom: 7.001,
-              maxzoom: 24,
-            },
-          */
           ],
           sky: {
             "atmosphere-blend": [
@@ -217,6 +257,19 @@ export default function Map(props) {
             color: "#555",
           },
         },
+      });
+      baseLayers.forEach((source) => {
+        if (source.uri !== "") {
+          fetch(source.uri)
+            .then((res) => res.json())
+            .then((sty) => {
+              Object.entries(sty.sources).forEach(([sourceId, sourceDef]) => {
+                if (!map.getSource(sourceId)) {
+                  map.addSource(sourceId, sourceDef);
+                }
+              });
+            });
+        }
       });
       map.addControl(new maplibregl.GlobeControl());
       map.addControl(
@@ -240,12 +293,14 @@ export default function Map(props) {
           .setDOMContent(container)
           .addTo(map);
       });
+
       map.on("mouseenter", "counties", () => {
         map.getCanvas().style.cursor = "crosshair";
       });
       map.on("mouseleave", "counties", () => {
         map.getCanvas().style.cursor = "pointer";
       });
+      map.addControl(new MapLibreStyleSwitcherControl());
       setMapp(map);
       return () => {
         map.remove();
@@ -255,6 +310,11 @@ export default function Map(props) {
 
   useEffect(() => {
     if (mapp) {
+      mapp.setLayoutProperty("counties", "visibility", "visible");
+      mapp.setLayoutProperty("richness_all", "visibility", "none");
+      mapp.setLayoutProperty("richness_plants", "visibility", "none");
+      mapp.setLayoutProperty("richness_vertebrates", "visibility", "none");
+      mapp.setLayoutProperty("richness_butterflies", "visibility", "none");
       mapp.setPaintProperty(
         "counties",
         "fill-color",
