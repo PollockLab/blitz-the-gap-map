@@ -33,8 +33,10 @@ export class MapLibreStyleSwitcherControl {
         if (srcElement.classList.contains("active")) {
           return;
         }
-        if (style.title === "Base layer") {
+        if (style.title === "Counties") {
           this.map.setLayoutProperty("counties", "visibility", "visible");
+        } else {
+          this.map.setLayoutProperty("counties", "visibility", "none");
         }
         this.map.setLayoutProperty("richness_all", "visibility", "none");
         this.map.setLayoutProperty("richness_plants", "visibility", "none");
@@ -54,37 +56,31 @@ export class MapLibreStyleSwitcherControl {
             this.map.removeLayer(layerId);
           }
         });
-        setTimeout(() => {
-          if (style.title === "Richness of all species") {
-            this.map.setLayoutProperty("counties", "visibility", "none");
-            this.map.setLayoutProperty("richness_all", "visibility", "visible");
-          }
-          if (style.title === "Plant richness") {
-            this.map.setLayoutProperty("counties", "visibility", "none");
-            this.map.setLayoutProperty(
-              "richness_plants",
-              "visibility",
-              "visible"
-            );
-          }
-          if (style.title === "Vertebrate richness") {
-            this.map.setLayoutProperty("counties", "visibility", "none");
-            this.map.setLayoutProperty(
-              "richness_vertebrates",
-              "visibility",
-              "visible"
-            );
-          }
-          if (style.title === "Butterfly richness") {
-            this.map.setLayoutProperty("counties", "visibility", "none");
-            this.map.setLayoutProperty(
-              "richness_butterflies",
-              "visibility",
-              "visible"
-            );
-          }
-          this.map.triggerRepaint();
-        }, 200);
+        if (style.title === "Richness of all species") {
+          this.map.setLayoutProperty("richness_all", "visibility", "visible");
+        }
+        if (style.title === "Plant richness") {
+          this.map.setLayoutProperty(
+            "richness_plants",
+            "visibility",
+            "visible"
+          );
+        }
+        if (style.title === "Vertebrate richness") {
+          this.map.setLayoutProperty(
+            "richness_vertebrates",
+            "visibility",
+            "visible"
+          );
+        }
+        if (style.title === "Butterfly richness") {
+          this.map.setLayoutProperty(
+            "richness_butterflies",
+            "visibility",
+            "visible"
+          );
+        }
+        this.map.triggerRepaint();
         if (style.uri !== "") {
           fetch(JSON.parse(srcElement.dataset.uri))
             .then((res) => res.json())
