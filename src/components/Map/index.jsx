@@ -1,9 +1,11 @@
 import { useEffect, useState, useRef, useCallback } from "react";
+import ReactDOM from "react-dom/client";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { Protocol } from "pmtiles";
-import _ from "lodash";
+import _, { every } from "lodash";
 import { amfhot, haline, ocean, custom } from "./colormaps";
+import Popup from "./Popup";
 import counties_challenges from "./counties_challenges.json";
 import counties_species from "./counties_species.json";
 import "./map.css";
@@ -11,7 +13,7 @@ import "./map.css";
 export default function Map(props) {
   const { COGUrl, opacity, challenges, challenge, colorBy } = props;
 
-  const [mapp, setMapp] = useState(false);
+  const [mapp, setMapp] = useState(null);
 
   const mapRef = useRef();
 
@@ -224,26 +226,18 @@ export default function Map(props) {
         })
       );
       map.on("click", "counties", (e) => {
-        let html = `<div style="text-align:left"><h3>${
-          e.features[0].properties.CDNAME
-        }</h3>
-        <strong>Number of species</strong>: ${
-          e.features[0].properties.number_of_species
-        }</b>
-        <br><strong>Number of challenges</strong>: ${
-          parseInt(e.features[0].properties.number_of_challenges) + 3
-        }</b>
-        <br><strong>List of challenges</strong>: <ul><li>${(
-          e.features[0].properties.challenges +
-          "," +
-          everywhere_challenges.join(",")
-        )
-          .replace("Birders, don't look up!", "Birders - don't look up!")
-          .split(",")
-          .join("</li><li>")}</li></b></div>`;
+        const container = document.createElement("div");
+
+        ReactDOM.createRoot(container).render(
+          <Popup
+            feature={e.features[0].properties}
+            everywhere_challenges={everywhere_challenges}
+          />
+        );
+
         new maplibregl.Popup()
           .setLngLat([e.lngLat.lng, e.lngLat.lat])
-          .setHTML(html)
+          .setDOMContent(container)
           .addTo(map);
       });
       map.on("mouseenter", "counties", () => {
