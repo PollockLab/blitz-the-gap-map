@@ -6,11 +6,11 @@ export default function Popup({ countyId, feature, everywhere_challenges }) {
 
   const handleFileUpload = (countyId) => {
     if (!countyId) return;
-    const file = "/blitz-the-gap-map/priorityspecies_per_county.csv";
+    const file = "/blitz-the-gap-map/priorityspecies_per_county_commonName.csv";
     if (!file) return;
 
     const results = [];
-    let csvF = { fields: ["species_name"] };
+    let csvF = { fields: ["species_name", "english_name", "inat_class"] };
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
@@ -19,7 +19,7 @@ export default function Popup({ countyId, feature, everywhere_challenges }) {
       complete: (result) => {
         const filtered = result.data
           .filter((row) => row.DGUID === countyId)
-          .map((row) => [row.sp]);
+          .map((row) => [row.sp, row.english_name, row.iNat_class]);
         csvF.data = filtered;
         const csv = Papa.unparse(csvF);
         setFilteredCsv(csv);
